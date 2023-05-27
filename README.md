@@ -2,7 +2,9 @@
 
 This is an n8n community node. It lets you use [the Carbone JS library](https://carbone.io/) in your n8n workflows.
 
-Carbone is a report generator that lets you render JSON data into DOCX, PDF, XLSX and more formats.
+Carbone is a report generator that lets you render JSON data into DOCX, PDF, XLSX and more formats:
+
+![a diagram of the dataflow in Carbone](https://carbone.io/img/doc/carboneWorkflow.svg)
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
