@@ -26,6 +26,7 @@
 		"nodes/**/*",
 		"nodes/**/*.json",
 		"package.json",
+		"README.md",
 		"carbone.d.ts",
 	],
 }
