@@ -48,6 +48,16 @@ const nodeOperationOptions: INodeProperties[] = [
 			show: { operation: ['render', 'toPdf'] },
 		},
 	},
+	{
+		displayName: 'Property Name Out',
+		name: 'dataPropertyNameOut',
+		type: 'string',
+		default: 'data',
+		description: 'Name of the binary property which will hold the converted document',
+		displayOptions: {
+			show: { operation: ['render', 'toPdf'] },
+		},
+	},
 ];
 
 export class CarboneNode implements INodeType {
@@ -93,6 +103,7 @@ export class CarboneNode implements INodeType {
 			try {
 				const operation = this.getNodeParameter('operation', itemIndex);
 				const dataPropertyName = this.getNodeParameter('dataPropertyName', itemIndex) as string;
+				const dataPropertyNameOut = this.getNodeParameter('dataPropertyNameOut', itemIndex) as string;
 				const item = items[itemIndex];
 
 				if (operation === 'render') {
@@ -121,8 +132,7 @@ export class CarboneNode implements INodeType {
 					item.json = context; // Overwrite the item's JSON data with the used context
 
 					// Add the rendered file in a new property
-					const outputBinaryName = dataPropertyName + '_rendered';
-					item.binary![outputBinaryName] = await this.helpers.prepareBinaryData(
+					item.binary![dataPropertyNameOut] = await this.helpers.prepareBinaryData(
 						rendered,
 						item.binary![dataPropertyName].fileName,
 						item.binary![dataPropertyName].mimeType,
@@ -142,8 +152,7 @@ export class CarboneNode implements INodeType {
 					const converted = await convertDocumentToPdf(fileContent);
 
 					// Add the converted file in a new property
-					const outputBinaryName = dataPropertyName + '_converted';
-					item.binary![outputBinaryName] = await this.helpers.prepareBinaryData(
+					item.binary![dataPropertyNameOut] = await this.helpers.prepareBinaryData(
 						converted,
 						item.binary![dataPropertyName].fileName!.replace('.docx', '.pdf'),
 						'application/pdf',
