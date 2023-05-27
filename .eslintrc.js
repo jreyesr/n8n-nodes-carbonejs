@@ -27,6 +27,7 @@ module.exports = {
 			extends: ['plugin:n8n-nodes-base/community'],
 			rules: {
 				'n8n-nodes-base/community-package-json-name-still-default': 'off',
+				'n8n-nodes-base/community-package-json-license-not-default': 'off' // We can't use straight MIT, since Carbone is licensed under something weird
 			},
 		},
 		{
