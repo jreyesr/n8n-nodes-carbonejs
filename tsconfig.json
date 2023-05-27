@@ -27,6 +27,7 @@
 		"nodes/**/*.json",
 		"package.json",
 		"README.md",
+		"images/*.png",
 		"carbone.d.ts",
 	],
 }
