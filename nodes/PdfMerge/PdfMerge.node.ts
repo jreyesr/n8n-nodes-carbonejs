@@ -69,10 +69,7 @@ export class PdfMerge implements INodeType {
 		for (let itemIndex = 0; itemIndex < items1.length; itemIndex++) {
 			const dataPropertyName1 = this.getNodeParameter('dataPropertyName1', itemIndex) as string;
 			const dataPropertyName2 = this.getNodeParameter('dataPropertyName2', itemIndex) as string;
-			const dataPropertyNameOut = this.getNodeParameter(
-				'dataPropertyNameOut',
-				itemIndex,
-			) as string;
+			const dataPropertyNameOut = this.getNodeParameter('dataPropertyNameOut', itemIndex) as string;
 			const item1 = items1[itemIndex];
 			const item2 = items2[itemIndex];
 

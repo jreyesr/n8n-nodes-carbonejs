@@ -103,7 +103,10 @@ export class CarboneNode implements INodeType {
 			try {
 				const operation = this.getNodeParameter('operation', itemIndex);
 				const dataPropertyName = this.getNodeParameter('dataPropertyName', itemIndex) as string;
-				const dataPropertyNameOut = this.getNodeParameter('dataPropertyNameOut', itemIndex) as string;
+				const dataPropertyNameOut = this.getNodeParameter(
+					'dataPropertyNameOut',
+					itemIndex,
+				) as string;
 				const item = items[itemIndex];
 
 				if (operation === 'render') {
