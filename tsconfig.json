@@ -26,5 +26,6 @@
 		"nodes/**/*",
 		"nodes/**/*.json",
 		"package.json",
+		"carbone.d.ts",
 	],
 }

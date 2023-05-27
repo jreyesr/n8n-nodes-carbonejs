@@ -9,7 +9,7 @@ import {
 } from 'n8n-workflow';
 import type { Readable } from 'stream';
 import { BINARY_ENCODING } from 'n8n-workflow';
-import { isWordDocument, renderDocument } from './CarboneUtils';
+import { convertDocumentToPdf, isWordDocument, renderDocument } from './CarboneUtils';
 
 const nodeOperations: INodePropertyOptions[] = [
 	{
@@ -121,16 +121,24 @@ export class CarboneNode implements INodeType {
 				} else if (operation === 'toPdf') {
 					const binaryData = this.helpers.assertBinaryData(itemIndex, dataPropertyName);
 
-					console.log(binaryData)
-
-					let fileContent: Buffer | Readable;
+					let fileContent: Buffer;
 					if (binaryData.id) {
-						fileContent = this.helpers.getBinaryStream(binaryData.id);
+						fileContent = await this.helpers.binaryToBuffer(
+							this.helpers.getBinaryStream(binaryData.id),
+						);
 					} else {
 						fileContent = Buffer.from(binaryData.data, BINARY_ENCODING);
 					}
 
-					console.log(fileContent);
+					const converted = await convertDocumentToPdf(fileContent);
+
+					// Add the converted file in a new property
+					const outputBinaryName = dataPropertyName + '_converted';
+					item.binary![outputBinaryName] = await this.helpers.prepareBinaryData(
+						converted,
+						item.binary![dataPropertyName].fileName!.replace('.docx', '.pdf'),
+						'application/pdf',
+					);
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {

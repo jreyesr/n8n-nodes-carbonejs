@@ -48,4 +48,21 @@ const renderDocument = async (
 	});
 };
 
-export { withTempFile, withTempDir, isWordDocument, renderDocument };
+const convertDocumentToPdf = async (document: Buffer): Promise<Buffer> => {
+	var options = {
+		convertTo: 'pdf',
+		extension: 'docx',
+	};
+
+	return await new Promise((resolve, reject) => {
+		carbone.convert(document, options, function (err, result) {
+			if (err) {
+				reject(err);
+			}
+
+			resolve(result);
+		});
+	});
+};
+
+export { withTempFile, withTempDir, isWordDocument, renderDocument, convertDocumentToPdf };
