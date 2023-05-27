@@ -30,7 +30,8 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "nodes": [
-      "dist/nodes/CarboneNode/CarboneNode.node.js"
+      "dist/nodes/CarboneNode/CarboneNode.node.js",
+      "dist/nodes/PdfMerge/PdfMerge.node.js"
     ]
   },
   "devDependencies": {
@@ -46,6 +47,7 @@
     "typescript": "~4.8.4"
   },
   "dependencies": {
-    "carbone": "^3.5.5"
+    "carbone": "^3.5.5",
+    "pdf-lib": "^1.17.1"
   }
 }
