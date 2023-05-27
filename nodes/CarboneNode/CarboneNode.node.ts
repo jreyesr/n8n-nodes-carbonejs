@@ -52,7 +52,7 @@ const nodeOperationOptions: INodeProperties[] = [
 
 export class CarboneNode implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Carbone Node',
+		displayName: 'Carbone',
 		name: 'carboneNode',
 		icon: 'file:fileword.svg',
 		group: ['transform'],
@@ -60,7 +60,7 @@ export class CarboneNode implements INodeType {
 		subtitle: '={{ $parameter["operation"]}}',
 		description: 'Operations with the Carbone document generator',
 		defaults: {
-			name: 'Carbone Node',
+			name: 'Carbone',
 		},
 		inputs: ['main'],
 		outputs: ['main'],
@@ -72,6 +72,15 @@ export class CarboneNode implements INodeType {
 				noDataExpression: true,
 				options: nodeOperations,
 				default: 'render',
+			},
+			{
+				displayName: 'This operation requires LibreOffice to be installed',
+				name: 'notice',
+				type: 'notice',
+				default: '',
+				displayOptions: {
+					show: { operation: ['toPdf'] },
+				},
 			},
 			...nodeOperationOptions,
 		],
