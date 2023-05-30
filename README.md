@@ -28,7 +28,7 @@ Must receive an input item with both `$json` and `$binary` keys. The `$json` key
 
 ### Convert to PDF
 
-> **NOTE:** This operation requires LibreOffice to be installed. If using the native NPM install, you should install LibreOffice system-wide. If using the Docker images, you'd need to create a custom Docker image, based on `n8nio/n8n`, which also installs LibreOffice.
+> **NOTE:** This operation requires LibreOffice to be installed. If using the native NPM install, you should install LibreOffice system-wide. If using the Docker images, this operation doesn't seem to work :(
 
 This node must receive items with a binary property containing a DOCX document. The selected document will be rendered into a PDF file using the LibreOffice renderer, since [according to one of the Carbone authors](https://github.com/carboneio/carbone/issues/41#issuecomment-528573164), "I tried to avoid LibreOffice because I wanted a tool really light and highly performant. But after many researches, I have never found a solution to convert a document more reliable than LibreOffice and which can run everywhere."
 
@@ -97,4 +97,76 @@ E. The document, now with the cover page added. Note that it has two pages, comi
 * [Detailed docs on template design](https://carbone.io/documentation.html#design-your-first-template)
 
 
+## Usage with Docker
 
+> **NOTE:** As of now, I haven't been able to make Carbone work with LibreOffice in Docker, so it probably won't work with N8N Docker deployments. If you manage to make it work, please open an issue!
+> 
+> As of now, if you need to convert rendered documents to PDF, I recommend either a) using native (NPM) deployments for N8N, o b) using a standalone Docker container that exposes some sort of REST API, deploying it alongside the N8N container, and using the [HTTP Request node](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/) to interface with it.
+>
+> May I suggest [Gotenberg](https://github.com/gotenberg/gotenberg), just for the awesome portrait of a Gutenberg gopher? Note that I can't vouch for the security of that service, but it seems legit and active. 
+
+Using the node with a native N8N instance (i.e., [one installed with `npm`](https://docs.n8n.io/hosting/installation/npm/)) is relatively easy: install LibreOffice using the OS's utilities, if required (e.g. `apt install libreoffice-common` on Ubuntu), then install the node with `npm` or using the N8N UI, and then use it.
+
+[Docker deployments](https://docs.n8n.io/hosting/installation/docker/) add some complexity, since you can't necessarily rely on the NPM packages persisting across container restarts, ~~and you need to install the LibreOffice package, if required, in the container image, not on your host OS~~.
+
+Here's a checklist of changes that are required to make the node work on Docker deployments:
+
+- [ ] Ensure that the `/home/node/.n8n` directory (on the container) is mapped to a volume. If using plain Docker, use `-v host_dir_or_vol_name:/home/node/.n8n` as part of the `docker run` command (note that N8N's [Docker quickstart](https://docs.n8n.io/hosting/installation/docker/#starting-n8n) already does this, and maps that folder to `~/.n8n` on your host device). If using Docker Compose, ensure that you have an entry under the `volumes` array that has `- host_dir_or_vol_name:/home/node/.n8n` as its value
+- [ ] Install the node as normal (i.e. by going to the `Settings>Community Nodes` page and searching for `n8n-nodes-carbonejs`). Ensure that the node appears in the host-mapped volume, under the `node_modules` directory.
+- [ ] ~~If you wish to use the Convert to PDF action, you'll additionally need to add the LibreOffice system library to the Docker image and recompile it.~~
+	- [ ] ~~Create a `Dockerfile` with the following contents:~~
+		```Dockerfile
+		FROM n8nio/n8n:latest
+
+		RUN apk --update --no-cache --purge add libreoffice-common
+		```
+	- [ ] ~~If using plain Docker, run `docker build . -t n8nio/n8n:latest-libreoffice`~~
+	- [ ] ~~From there on, run N8N as `docker run <...> n8nio/n8n:latest-libreoffice`~~
+	- [ ] ~~If using Docker Compose, change the service declaration:~~
+		```yml
+		services:
+		  n8n:
+		    image: n8nio/n8n:latest-libreoffice  # Declare a new tag
+		    build: .  # Add this line
+		```
+	- [ ] ~~From there on, run `docker-compose build` before running `docker-compose up`, or use `docker-compose up -b`~~
+	- [ ] ~~Whenever you need to update the N8N version, remember to run `docker pull n8nio/n8n:latest` first, as otherwise the build process will use a cached base image~~
+
+### A workaround for converting DOCX files to PDF on Docker
+
+Since the LibreOffice-Carbone-N8N-Alpine stack is currently not working, I'd recommend using a standalone dedicated container to do DOCX→PDF conversions, in the spirit of small, dedicated microservices and such.
+
+A cursory Google search turns up [Gotenberg](https://github.com/gotenberg/gotenberg), "A Docker-powered stateless API for PDF files." As usual, do your own research, deploying untrusted containers may make your lunch disappear, and all the usual warnings.
+
+See [their docs](https://gotenberg.dev/docs/get-started/docker-compose) for Docker Compose information:
+
+```yml
+services:
+  # Your other services (i.e. N8N)
+
+  gotenberg:
+    image: gotenberg/gotenberg:7
+```
+
+Then, use [the LibreOffice module](https://gotenberg.dev/docs/modules/libreoffice#route) to convert files:
+
+1. Create a [HTTP Request node](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.httprequest/) in the N8N workflow
+1. Set the method to `POST`
+1. Set the URL to `http://gotenberg:3000/forms/libreoffice/convert`
+1. Enable the `Send Body` toggle
+1. Set the Body Content Type to `Form-Data`
+1. Set the Parameter Type of the first Body parameter to `n8n Binary Data`
+1. Set the Name to `files` (it looks like it could also be something else, but set it to `files` just to match the Gotenberg docs)
+1. Set the Input Data Field Name to the name of the binary field holding the DOCX file (could be `data`)
+
+See below for a screenshot of a working configuration:
+
+![](./images/gotenberg.png)
+
+By default, this configuration will override the incoming file with the response's (PDF) file. If you wish to preserve both files:
+
+1. In the HTTP Request node, click the Add Option button at the bottom, then click the Response option
+1. In the new section that appears, set the Response Format to `File`
+1. In the new Put Output in Field textfield that appears, set it to a name that is different to the name of the input file (e.g., if the input file is in `data`, set it to `data_pdf` or something)
+
+![](./images/gotenberg_no_owrite.png)
