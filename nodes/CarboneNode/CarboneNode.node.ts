@@ -84,7 +84,7 @@ export class CarboneNode implements INodeType {
 				default: 'render',
 			},
 			{
-				displayName: 'This operation requires LibreOffice to be installed',
+				displayName: 'This operation requires LibreOffice to be installed! If using Docker, see <a href="https://www.npmjs.com/package/n8n-nodes-carbonejs#a-workaround-for-converting-docx-files-to-pdf-on-docker" target="_blank">this link</a> for a suggested alternative.',
 				name: 'notice',
 				type: 'notice',
 				default: '',
