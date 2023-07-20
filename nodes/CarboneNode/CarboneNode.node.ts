@@ -129,6 +129,7 @@ export class CarboneNode implements INodeType {
 					} else {
 						fileContent = Buffer.from(binaryData.data, BINARY_ENCODING);
 					}
+					console.debug(fileContent)
 
 					const rendered = await renderDocument(fileContent, context);
 

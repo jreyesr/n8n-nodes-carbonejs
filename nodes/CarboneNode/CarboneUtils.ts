@@ -17,7 +17,7 @@ const withTempDir = async <T>(fn: (dirPath: string) => T): Promise<T> => {
 	try {
 		return await fn(dir);
 	} finally {
-		fs.rmdir(dir, { recursive: true });
+		fs.rm(dir, { recursive: true });
 	}
 };
 
@@ -29,8 +29,8 @@ const renderDocument = async (
 	context: any,
 ): Promise<Buffer | Readable> => {
 	return withTempFile(async (file) => {
-		await fs.writeFile(file, document); // Save the template to temp dir, since Carbone needs to read from disk
-
+		await fs.writeFile(file, document, { encoding: 'binary'});
+		console.debug(await fs.readFile(file));
 		return await new Promise((resolve, reject) => {
 			carbone.render(file, context, {}, function (err, result) {
 				if (err) {

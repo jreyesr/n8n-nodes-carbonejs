@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-carbonejs",
-  "version": "1.0.1",
+  "version": "1.0.2-alpha1",
   "description": "A Carbone JS node that renders Word templates on n8n.io",
   "keywords": [
     "n8n-community-node-package"
