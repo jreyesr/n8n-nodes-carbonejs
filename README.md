@@ -26,6 +26,10 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 Must receive an input item with both `$json` and `$binary` keys. The `$json` key may be used to compose the "context", which will be provided to the templating engine. The `$binary` key should contain a DOCX document that contains a valid Carbone template.
 
+This operation can take "advanced options", which are passed directly to Carbone's rendering engine. See [Carbone's docs](https://carbone.io/api-reference.html#options) for information about each option. They appear in the Options dropdown, at the bottom of the Render operation:
+
+![a screenshot of the advanced options](images/image.png)
+
 ### Convert to PDF
 
 > **NOTE:** This operation requires LibreOffice to be installed. If using the native NPM install, you should install LibreOffice system-wide. If using the Docker images, this operation doesn't seem to work :(
