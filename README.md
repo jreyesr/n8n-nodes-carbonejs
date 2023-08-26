@@ -26,6 +26,10 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 Must receive an input item with both `$json` and `$binary` keys. The `$json` key may be used to compose the "context", which will be provided to the templating engine. The `$binary` key should contain a DOCX document that contains a valid Carbone template.
 
+This operation can take "advanced options", which are passed directly to Carbone's rendering engine. See [Carbone's docs](https://carbone.io/api-reference.html#options) for information about each option. They appear in the Options dropdown, at the bottom of the Render operation:
+
+![a screenshot of the advanced options](images/image.png)
+
 ### Convert to PDF
 
 > **NOTE:** This operation requires LibreOffice to be installed. If using the native NPM install, you should install LibreOffice system-wide. If using the Docker images, this operation doesn't seem to work :(
@@ -170,3 +174,27 @@ By default, this configuration will override the incoming file with the response
 1. In the new Put Output in Field textfield that appears, set it to a name that is different to the name of the input file (e.g., if the input file is in `data`, set it to `data_pdf` or something)
 
 ![](./images/gotenberg_no_owrite.png)
+
+## Development
+
+More information [here](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/).
+
+You must have a local (non-Docker) installation of N8N.
+
+1. Clone this repo
+1. `npm i`
+1. Make changes as required
+1. `npm run build`
+1. `npm link`
+1. Go to N8N's install dir (`~/.n8n/nodes/` on Linux), then run `npm link n8n-nodes-carbonejs`
+1. `n8n start`. If you need to start the N8N instance on another port, `N8N_PORT=5679 n8n start`
+1. There's no need to visit the web UI to install the node: it's already installed since it lives in the correct directory
+1. After making changes in the code and rebuilding, you'll need to stop N8N (Ctrl+C) and restart it (`n8n start`)
+1. For faster changes, instead of rebuilding the code each time, run `npm run dev`. This will start the TypeScript compiler in watch mode, which will recompile the code on every change. You'll still need to restart N8N manually, though.
+
+### Releasing changes
+
+- [ ] Bump the version in `package.json`. We use [SemVer](https://semver.org/).
+- [ ] Add an entry to the top of `CHANGELOG.md` describing the changes.
+- [ ] Push changes, open a PR and merge it to master branch (if developing on another branch)
+- [ ] Create a release. This will kick off the CI which will build and publish the package on NPM

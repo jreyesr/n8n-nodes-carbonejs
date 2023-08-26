@@ -9,7 +9,7 @@ import {
 } from 'n8n-workflow';
 import type { Readable } from 'stream';
 import { BINARY_ENCODING } from 'n8n-workflow';
-import { convertDocumentToPdf, isWordDocument, renderDocument } from './CarboneUtils';
+import { convertDocumentToPdf, isWordDocument, renderDocument, buildOptions } from './CarboneUtils';
 
 const nodeOperations: INodePropertyOptions[] = [
 	{
@@ -60,6 +60,69 @@ const nodeOperationOptions: INodeProperties[] = [
 	},
 ];
 
+const nodeOptions: INodeProperties[] = [
+	{
+		displayName: 'Options',
+		name: 'options',
+		type: 'collection',
+		placeholder: 'Add Option',
+		default: {},
+		options: [
+			{
+				displayName: 'Timezone',
+				name: 'timezone',
+				type: 'string',
+				default: 'Europe/Paris',
+				description:
+					'Convert document dates to a timezone. The date must be chained with the `:formatD` formatter. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List, in the column "TZ identifier"',
+			},
+			{
+				displayName: 'Locale',
+				name: 'lang',
+				type: 'string',
+				default: 'en',
+				description:
+					'Locale of the generated document, it will used for translation `{t()}`, formatting numbers with `:formatN`, and currencies `:formatC`. See https://github.com/carboneio/carbone/blob/master/formatters/_locale.js.',
+			},
+			{
+				displayName: 'Complement',
+				name: 'complement',
+				type: 'json',
+				default: '{}',
+				description: 'Extra data accessible in the template with {c.} instead of {d.}',
+			},
+			{
+				displayName: 'Alias',
+				name: 'variableStr',
+				type: 'string',
+				default: '',
+				placeholder: 'e.g. {#def = d.id}', // eslint-disable-line n8n-nodes-base/node-param-placeholder-miscased-id
+				description: 'Predefined alias. See https://carbone.io/documentation.html#alias.',
+			},
+			{
+				displayName: 'Enums',
+				name: 'enum',
+				type: 'json',
+				default: '',
+				placeholder: 'e.g. {"ORDER_STATUS": ["open", "close"]}',
+				description: 'Object with enumerations, use it in reports with `convEnum` formatters',
+			},
+			{
+				displayName: 'Translations',
+				name: 'translations',
+				type: 'json',
+				default: '',
+				placeholder: 'e.g. {"es-es": {"one": "uno"}}',
+				description:
+					'When the report is generated, all text between `{t( )}` is replaced with the corresponding translation. The `lang` option is required to select the correct translation. See https://carbone.io/documentation.html#translations',
+			},
+		],
+		displayOptions: {
+			show: { operation: ['render'] },
+		},
+	},
+];
+
 export class CarboneNode implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Carbone',
@@ -84,7 +147,8 @@ export class CarboneNode implements INodeType {
 				default: 'render',
 			},
 			{
-				displayName: 'This operation requires LibreOffice to be installed! If using Docker, see <a href="https://www.npmjs.com/package/n8n-nodes-carbonejs#a-workaround-for-converting-docx-files-to-pdf-on-docker" target="_blank">this link</a> for a suggested alternative.',
+				displayName:
+					'This operation requires LibreOffice to be installed! If using Docker, see <a href="https://www.npmjs.com/package/n8n-nodes-carbonejs#a-workaround-for-converting-docx-files-to-pdf-on-docker" target="_blank">this link</a> for a suggested alternative.',
 				name: 'notice',
 				type: 'notice',
 				default: '',
@@ -93,6 +157,7 @@ export class CarboneNode implements INodeType {
 				},
 			},
 			...nodeOperationOptions,
+			...nodeOptions,
 		],
 	};
 
@@ -130,7 +195,8 @@ export class CarboneNode implements INodeType {
 						fileContent = Buffer.from(binaryData.data, BINARY_ENCODING);
 					}
 
-					const rendered = await renderDocument(fileContent, context);
+					const options = buildOptions(this, itemIndex);
+					const rendered = await renderDocument(fileContent, context, options);
 
 					item.json = context; // Overwrite the item's JSON data with the used context
 
