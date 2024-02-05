@@ -6,9 +6,9 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
+	BINARY_ENCODING,
 } from 'n8n-workflow';
 import type { Readable } from 'stream';
-import { BINARY_ENCODING } from 'n8n-workflow';
 import { convertDocumentToPdf, isWordDocument, renderDocument, buildOptions } from './CarboneUtils';
 
 const nodeOperations: INodePropertyOptions[] = [
@@ -190,8 +190,10 @@ export class CarboneNode implements INodeType {
 					}
 					let fileContent: Buffer | Readable;
 					if (binaryData.id) {
-						fileContent = this.helpers.getBinaryStream(binaryData.id);
+						console.log(`Reading from file, id=${binaryData.id}`);
+						fileContent = await this.helpers.getBinaryStream(binaryData.id);
 					} else {
+						console.log(`Reading directly into buffer, size=${binaryData.data.length}`);
 						fileContent = Buffer.from(binaryData.data, BINARY_ENCODING);
 					}
 
