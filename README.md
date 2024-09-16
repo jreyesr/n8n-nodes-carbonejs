@@ -186,7 +186,7 @@ You must have a local (non-Docker) installation of N8N.
 1. Make changes as required
 1. `npm run build`
 1. `npm link`
-1. Go to N8N's install dir (`~/.n8n/nodes/` on Linux), then run `npm link n8n-nodes-carbonejs`
+1. Go to N8N's install dir (`~/.n8n/custom/` on Linux), then run `npm link n8n-nodes-carbonejs`
 1. `n8n start`. If you need to start the N8N instance on another port, `N8N_PORT=5679 n8n start`
 1. There's no need to visit the web UI to install the node: it's already installed since it lives in the correct directory
 1. After making changes in the code and rebuilding, you'll need to stop N8N (Ctrl+C) and restart it (`n8n start`)

@@ -1,4 +1,4 @@
-import { IExecuteFunctions } from 'n8n-core';
+import {IExecuteFunctions} from 'n8n-core';
 import {
 	INodeExecutionData,
 	INodeProperties,
@@ -6,10 +6,8 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeOperationError,
-	BINARY_ENCODING,
 } from 'n8n-workflow';
-import type { Readable } from 'stream';
-import { convertDocumentToPdf, isWordDocument, renderDocument, buildOptions } from './CarboneUtils';
+import {convertDocumentToPdf, isWordDocument, renderDocument, buildOptions} from './CarboneUtils';
 
 const nodeOperations: INodePropertyOptions[] = [
 	{
@@ -35,7 +33,7 @@ const nodeOperationOptions: INodeProperties[] = [
 		default: '{}',
 		description: 'This data will be used to fill the template',
 		displayOptions: {
-			show: { operation: ['render'] },
+			show: {operation: ['render']},
 		},
 	},
 	{
@@ -45,7 +43,7 @@ const nodeOperationOptions: INodeProperties[] = [
 		default: 'data',
 		description: 'Name of the binary property which holds the document to be used',
 		displayOptions: {
-			show: { operation: ['render', 'toPdf'] },
+			show: {operation: ['render', 'toPdf']},
 		},
 	},
 	{
@@ -55,7 +53,7 @@ const nodeOperationOptions: INodeProperties[] = [
 		default: 'data',
 		description: 'Name of the binary property which will hold the converted document',
 		displayOptions: {
-			show: { operation: ['render', 'toPdf'] },
+			show: {operation: ['render', 'toPdf']},
 		},
 	},
 ];
@@ -118,7 +116,7 @@ const nodeOptions: INodeProperties[] = [
 			},
 		],
 		displayOptions: {
-			show: { operation: ['render'] },
+			show: {operation: ['render']},
 		},
 	},
 ];
@@ -153,7 +151,7 @@ export class CarboneNode implements INodeType {
 				type: 'notice',
 				default: '',
 				displayOptions: {
-					show: { operation: ['toPdf'] },
+					show: {operation: ['toPdf']},
 				},
 			},
 			...nodeOperationOptions,
@@ -163,6 +161,7 @@ export class CarboneNode implements INodeType {
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
+		const returnData: INodeExecutionData[] = [];
 
 		for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
 			try {
@@ -173,6 +172,11 @@ export class CarboneNode implements INodeType {
 					itemIndex,
 				) as string;
 				const item = items[itemIndex];
+				const newItem: INodeExecutionData = {
+					json: {},
+					binary: {},
+					pairedItem: {item: itemIndex},
+				};
 
 				if (operation === 'render') {
 					const context = JSON.parse(this.getNodeParameter('context', itemIndex, '') as string);
@@ -188,51 +192,43 @@ export class CarboneNode implements INodeType {
 							},
 						);
 					}
-					let fileContent: Buffer | Readable;
-					if (binaryData.id) {
-						console.log(`Reading from file, id=${binaryData.id}`);
-						fileContent = await this.helpers.getBinaryStream(binaryData.id);
-					} else {
-						console.log(`Reading directly into buffer, size=${binaryData.data.length}`);
-						fileContent = Buffer.from(binaryData.data, BINARY_ENCODING);
-					}
+					let fileContent = await this.helpers.getBinaryDataBuffer(itemIndex, dataPropertyName);
+					console.debug("content =", fileContent.subarray(0, 30).toString("base64") + "...")
 
 					const options = buildOptions(this, itemIndex);
 					const rendered = await renderDocument(fileContent, context, options);
+					console.debug("rendered =", rendered.subarray(0, 30).toString("base64") + "...")
 
-					item.json = context; // Overwrite the item's JSON data with the used context
+					newItem.json = context; // Present the used context as the node's JSON output
 
 					// Add the rendered file in a new property
-					item.binary![dataPropertyNameOut] = await this.helpers.prepareBinaryData(
+					newItem.binary![dataPropertyNameOut] = await this.helpers.prepareBinaryData(
 						rendered,
 						item.binary![dataPropertyName].fileName,
 						item.binary![dataPropertyName].mimeType,
 					);
 				} else if (operation === 'toPdf') {
-					const binaryData = this.helpers.assertBinaryData(itemIndex, dataPropertyName);
+					this.helpers.assertBinaryData(itemIndex, dataPropertyName);
 
-					let fileContent: Buffer;
-					if (binaryData.id) {
-						fileContent = await this.helpers.binaryToBuffer(
-							this.helpers.getBinaryStream(binaryData.id),
-						);
-					} else {
-						fileContent = Buffer.from(binaryData.data, BINARY_ENCODING);
-					}
+					let fileContent = await this.helpers.getBinaryDataBuffer(itemIndex, dataPropertyName);
+					console.debug("content =", fileContent.subarray(0, 30).toString("base64") + "...")
 
 					const converted = await convertDocumentToPdf(fileContent);
+					console.debug("converted =", converted.subarray(0, 30).toString("base64") + "...")
 
 					// Add the converted file in a new property
-					item.binary![dataPropertyNameOut] = await this.helpers.prepareBinaryData(
+					newItem.binary![dataPropertyNameOut] = await this.helpers.prepareBinaryData(
 						converted,
-						item.binary![dataPropertyName].fileName!.replace('.docx', '.pdf'),
+						item.binary![dataPropertyName].fileName?.replace('.docx', '.pdf') ?? "out.pdf",
 						'application/pdf',
 					);
 				}
+
+				returnData.push(newItem);
 			} catch (error) {
 				if (this.continueOnFail()) {
 					// Carry on with the data that was provided as input (short-circuit the node)
-					items.push({
+					returnData.push({
 						json: this.getInputData(itemIndex)[0].json,
 						binary: this.getInputData(itemIndex)[0].binary,
 						error,
@@ -253,6 +249,6 @@ export class CarboneNode implements INodeType {
 			}
 		}
 
-		return this.prepareOutputData(items);
+		return this.prepareOutputData(returnData);
 	}
 }
