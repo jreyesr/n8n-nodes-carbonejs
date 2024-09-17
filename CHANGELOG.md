@@ -1,3 +1,8 @@
+## v1.1.2 [2024-09-17]
+
+- Fix issue #7: sometimes, under unclear circumstances, rendering failed with an error `NodeOperationError: Unknown input file type`.
+  Thanks to [@JV300381](https://github.com/JV300381) for reporting the issue and helping confirm that it was solved!
+
 ## v1.1.1 [2024-02-02]
 
 - Fix issue #4: if the template binary file had been stored to disk by N8N (as opposed to keeping it in memory), the Render operation would fail with the error `ERROR: The "data" argument must be of type string or an instance of Buffer, TypedArray, or DataView. Received an instance of Promise`. This was due to [a breaking change in N8N v1.9.0](https://github.com/n8n-io/n8n/blob/master/packages/cli/BREAKING-CHANGES.md#what-changed-3). Thanks to [@altvk88](https://github.com/altvk88) for reporting the issue and helping diagnose it!

@@ -192,6 +192,19 @@ You must have a local (non-Docker) installation of N8N.
 1. After making changes in the code and rebuilding, you'll need to stop N8N (Ctrl+C) and restart it (`n8n start`)
 1. For faster changes, instead of rebuilding the code each time, run `npm run dev`. This will start the TypeScript compiler in watch mode, which will recompile the code on every change. You'll still need to restart N8N manually, though.
 
+### Small-scale release for single person
+
+Use when someone has reported an issue, to give that person a way to test the fix
+without having to release a version that may not fix their issue. Especially useful
+when the issue can't be reproduced locally.
+
+1. Temporarily edit the `package.json` file to another version, e.g. `v1.2.3-bugfix123`
+2. Run `npm ci && npm run build && npm publish --tag prerelease`
+3. This will build and upload a new release to NPM, _without marking it_ as the latest release! This is important
+   because otherwise other users of the node will start getting prompts to update their installations, which isn't correct
+4. Tell the user that may be interested in testing the changes to force-install that new version
+5. If/when the user confirms that the version fixes the issue, release for everyone: [see below](#releasing-changes)
+
 ### Releasing changes
 
 - [ ] Bump the version in `package.json`. We use [SemVer](https://semver.org/).
