@@ -7,7 +7,7 @@ import {
 	INodeTypeDescription,
 	NodeOperationError,
 } from 'n8n-workflow';
-import {convertDocumentToPdf, isWordDocument, renderDocument, buildOptions} from './CarboneUtils';
+import {convertDocumentToPdf, isOfficeDocument, renderDocument, buildOptions} from './CarboneUtils';
 
 const nodeOperations: INodePropertyOptions[] = [
 	{
@@ -182,11 +182,10 @@ export class CarboneNode implements INodeType {
 					const context = JSON.parse(this.getNodeParameter('context', itemIndex, '') as string);
 
 					const binaryData = this.helpers.assertBinaryData(itemIndex, dataPropertyName);
-					if (!isWordDocument(binaryData)) {
-						// Sanity check: only allow DOCX docs for now
+					if (!isOfficeDocument(binaryData)) {
 						throw new NodeOperationError(
 							this.getNode(),
-							`Binary property "${dataPropertyName}" should be a DOCX (Word) file, was ${binaryData.mimeType} instead`,
+							`Binary property "${dataPropertyName}" should be a DOCX (Word), XLSX (Excel) or PPTX (Powerpoint) file, was ${binaryData.mimeType} instead`,
 							{
 								itemIndex,
 							},

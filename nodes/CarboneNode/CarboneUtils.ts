@@ -4,8 +4,8 @@ import path from 'path';
 
 import carbone from 'carbone';
 
-import type { Readable } from 'stream';
-import { IBinaryData, IExecuteFunctions } from 'n8n-workflow';
+import type {Readable} from 'stream';
+import {IBinaryData, IExecuteFunctions} from 'n8n-workflow';
 
 // These two functions come straight from https://advancedweb.hu/secure-tempfiles-in-nodejs-without-dependencies/#solution,
 // plus typing. These should be safe (from pesky hackers and race conditions), and require no third-party dependencies
@@ -17,24 +17,28 @@ const withTempDir = async <T>(fn: (dirPath: string) => T): Promise<T> => {
 	try {
 		return await fn(dir);
 	} finally {
-		await fs.rm(dir, { recursive: true });
+		await fs.rm(dir, {recursive: true});
 	}
 };
 
-const isWordDocument = (data: IBinaryData) =>
-	data.mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+const isOfficeDocument = (data: IBinaryData) =>
+	[
+		'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+	].includes(data.mimeType);
 
 const buildOptions = (node: IExecuteFunctions, index: number): object => {
 	const additionalFields = node.getNodeParameter('options', index);
 	// console.debug(additionalFields);
 
 	let options: any = {};
-	if(additionalFields.timezone) options.timezone = additionalFields.timezone;
-	if(additionalFields.lang) options.lang = additionalFields.lang;
-	if(additionalFields.variableStr) options.variableStr = additionalFields.variableStr;
-	if(additionalFields.complement) options.complement = JSON.parse(additionalFields.complement as string);
-	if(additionalFields.enum) options.enum = JSON.parse(additionalFields.enum as string);
-	if(additionalFields.translations) options.translations = JSON.parse(additionalFields.translations as string);
+	if (additionalFields.timezone) options.timezone = additionalFields.timezone;
+	if (additionalFields.lang) options.lang = additionalFields.lang;
+	if (additionalFields.variableStr) options.variableStr = additionalFields.variableStr;
+	if (additionalFields.complement) options.complement = JSON.parse(additionalFields.complement as string);
+	if (additionalFields.enum) options.enum = JSON.parse(additionalFields.enum as string);
+	if (additionalFields.translations) options.translations = JSON.parse(additionalFields.translations as string);
 
 	// console.debug(options)
 	return options;
@@ -85,7 +89,7 @@ const convertDocumentToPdf = async (document: Buffer): Promise<Buffer> => {
 export {
 	withTempFile,
 	withTempDir,
-	isWordDocument,
+	isOfficeDocument,
 	buildOptions,
 	renderDocument,
 	convertDocumentToPdf,
