@@ -1,3 +1,7 @@
+## v1.2.0 [2025-04-18]
+
+- Remove the limitation on rendering only DOCX files (allow also XLSX and PPTX templates)
+
 ## v1.1.2 [2024-09-17]
 
 - Fix issue #7: sometimes, under unclear circumstances, rendering failed with an error `NodeOperationError: Unknown input file type`.
