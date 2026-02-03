@@ -1,3 +1,7 @@
+## v1.3.0 [2026-02-02]
+
+- Allow this node to render any files that are supported by Carbone. Many thanks to [@sweenu](https://github.com/sweenu) for the PR [#16](https://github.com/jreyesr/n8n-nodes-carbonejs/pull/16)
+
 ## v1.2.0 [2025-04-18]
 
 - Remove the limitation on rendering only DOCX files (allow also XLSX and PPTX templates)
