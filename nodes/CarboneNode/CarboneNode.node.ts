@@ -7,7 +7,13 @@ import {
 	INodeTypeDescription,
 	NodeOperationError,
 } from 'n8n-workflow';
-import {convertDocumentToPdf, isOfficeDocument, renderDocument, buildOptions} from './CarboneUtils';
+import {
+	convertDocumentToPdf,
+	isSupportedDocument,
+	getExtensionFromMimeType,
+	renderDocument,
+	buildOptions,
+} from './CarboneUtils';
 
 const nodeOperations: INodePropertyOptions[] = [
 	{
@@ -182,10 +188,10 @@ export class CarboneNode implements INodeType {
 					const context = JSON.parse(this.getNodeParameter('context', itemIndex, '') as string);
 
 					const binaryData = this.helpers.assertBinaryData(itemIndex, dataPropertyName);
-					if (!isOfficeDocument(binaryData)) {
+					if (!isSupportedDocument(binaryData)) {
 						throw new NodeOperationError(
 							this.getNode(),
-							`Binary property "${dataPropertyName}" should be a DOCX (Word), XLSX (Excel) or PPTX (Powerpoint) file, was ${binaryData.mimeType} instead`,
+							`Binary property "${dataPropertyName}" should be a supported document type (DOCX, XLSX, PPTX, ODT, ODS, ODP, ODG, HTML, XML, TXT, CSV), was ${binaryData.mimeType} instead`,
 							{
 								itemIndex,
 							},
@@ -207,18 +213,21 @@ export class CarboneNode implements INodeType {
 						item.binary![dataPropertyName].mimeType,
 					);
 				} else if (operation === 'toPdf') {
-					this.helpers.assertBinaryData(itemIndex, dataPropertyName);
+					const binaryData = this.helpers.assertBinaryData(itemIndex, dataPropertyName);
 
 					let fileContent = await this.helpers.getBinaryDataBuffer(itemIndex, dataPropertyName);
 					console.debug("content =", fileContent.subarray(0, 30).toString("base64") + "...")
 
-					const converted = await convertDocumentToPdf(fileContent);
+					const extension = getExtensionFromMimeType(binaryData.mimeType) ?? 'docx';
+					const converted = await convertDocumentToPdf(fileContent, extension);
 					console.debug("converted =", converted.subarray(0, 30).toString("base64") + "...")
 
 					// Add the converted file in a new property
+					const originalFileName = item.binary![dataPropertyName].fileName ?? 'out.docx';
+					const pdfFileName = originalFileName.replace(/\.[^.]+$/, '.pdf');
 					newItem.binary![dataPropertyNameOut] = await this.helpers.prepareBinaryData(
 						converted,
-						item.binary![dataPropertyName].fileName?.replace('.docx', '.pdf') ?? "out.pdf",
+						pdfFileName,
 						'application/pdf',
 					);
 				}

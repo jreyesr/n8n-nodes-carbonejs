@@ -21,12 +21,32 @@ const withTempDir = async <T>(fn: (dirPath: string) => T): Promise<T> => {
 	}
 };
 
-const isOfficeDocument = (data: IBinaryData) =>
-	[
-		'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-		'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-	].includes(data.mimeType);
+const MIME_TO_EXTENSION: Record<string, string> = {
+	// Microsoft Office formats
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+	// OpenDocument formats
+	'application/vnd.oasis.opendocument.text': 'odt',
+	'application/vnd.oasis.opendocument.spreadsheet': 'ods',
+	'application/vnd.oasis.opendocument.presentation': 'odp',
+	'application/vnd.oasis.opendocument.graphics': 'odg',
+	// Web formats
+	'text/html': 'html',
+	'application/xhtml+xml': 'xhtml',
+	'application/xml': 'xml',
+	'text/xml': 'xml',
+	// Text formats
+	'text/plain': 'txt',
+	'text/csv': 'csv',
+};
+
+const SUPPORTED_MIME_TYPES = Object.keys(MIME_TO_EXTENSION);
+
+const isSupportedDocument = (data: IBinaryData) => SUPPORTED_MIME_TYPES.includes(data.mimeType);
+
+const getExtensionFromMimeType = (mimeType: string): string | undefined =>
+	MIME_TO_EXTENSION[mimeType];
 
 const buildOptions = (node: IExecuteFunctions, index: number): object => {
 	const additionalFields = node.getNodeParameter('options', index);
@@ -69,10 +89,10 @@ const renderDocument = async (
 	});
 };
 
-const convertDocumentToPdf = async (document: Buffer): Promise<Buffer> => {
+const convertDocumentToPdf = async (document: Buffer, extension: string): Promise<Buffer> => {
 	var options = {
 		convertTo: 'pdf',
-		extension: 'docx',
+		extension,
 	};
 
 	return await new Promise((resolve, reject) => {
@@ -89,7 +109,9 @@ const convertDocumentToPdf = async (document: Buffer): Promise<Buffer> => {
 export {
 	withTempFile,
 	withTempDir,
-	isOfficeDocument,
+	isSupportedDocument,
+	getExtensionFromMimeType,
+	SUPPORTED_MIME_TYPES,
 	buildOptions,
 	renderDocument,
 	convertDocumentToPdf,
